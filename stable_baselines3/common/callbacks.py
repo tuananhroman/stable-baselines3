@@ -297,6 +297,7 @@ class EvalCallback(EventCallback):
         self.eval_freq = eval_freq
         self.best_mean_reward = -np.inf
         self.last_mean_reward = -np.inf
+        self.last_success_rate = -np.inf
         self.deterministic = deterministic
         self.render = render
         self.warn = warn
@@ -406,6 +407,7 @@ class EvalCallback(EventCallback):
                 if self.verbose > 0:
                     print(f"Success rate: {100 * success_rate:.2f}%")
                 self.logger.record("eval/success_rate", success_rate)
+                self.last_success_rate = success_rate
 
             if mean_reward > self.best_mean_reward:
                 if self.verbose > 0:
