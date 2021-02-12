@@ -282,6 +282,7 @@ class EvalCallback(EventCallback):
     def __init__(
         self,
         eval_env: Union[gym.Env, VecEnv],
+        callback_on_eval_end: Optional[BaseCallback] = None,
         callback_on_new_best: Optional[BaseCallback] = None,
         n_eval_episodes: int = 5,
         eval_freq: int = 10000,
@@ -301,6 +302,7 @@ class EvalCallback(EventCallback):
         self.deterministic = deterministic
         self.render = render
         self.warn = warn
+        self.callback_on_eval_end = callback_on_eval_end
 
         # Convert to VecEnv for consistency
         if not isinstance(eval_env, VecEnv):
@@ -418,6 +420,9 @@ class EvalCallback(EventCallback):
                 # Trigger callback if needed
                 if self.callback is not None:
                     return self._on_event()
+            
+            if self.callback_on_eval_end is not None:
+                self.callback_on_eval_end._on_step(self)
 
         return True
 
