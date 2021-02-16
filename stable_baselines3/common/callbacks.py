@@ -357,6 +357,7 @@ class EvalCallback(EventCallback):
     def _on_step(self) -> bool:
 
         if self.eval_freq > 0 and self.n_calls % self.eval_freq == 0:
+            new_best = False
             # Sync training and eval env if there is VecNormalize
             sync_envs_normalization(self.training_env, self.eval_env)
 
@@ -417,12 +418,17 @@ class EvalCallback(EventCallback):
                 if self.best_model_save_path is not None:
                     self.model.save(os.path.join(self.best_model_save_path, "best_model"))
                 self.best_mean_reward = mean_reward
+                new_best = True
+
+            if self.callback_on_eval_end is not None:
+                    self.callback_on_eval_end._on_step(self)
+
+            if new_best:        
                 # Trigger callback if needed
                 if self.callback is not None:
                     return self._on_event()
             
-            if self.callback_on_eval_end is not None:
-                self.callback_on_eval_end._on_step(self)
+            
 
         return True
 
