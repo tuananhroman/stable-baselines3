@@ -461,7 +461,7 @@ class StopTrainingOnRewardThreshold(BaseCallback):
         else:
             continue_training = not bool(
                 self.parent.best_mean_reward >= self.reward_threshold and
-                self.task_manager.curr_stage == self.task_manager.get_num_stages())
+                self.task_manager._curr_stage == self.task_manager.get_num_stages())
         if self.verbose > 0 and not continue_training:
                 print(
                     f"Stopping training because the mean reward {self.parent.best_mean_reward:.2f} "
