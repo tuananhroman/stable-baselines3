@@ -8,7 +8,7 @@ import numpy as np
 
 from stable_baselines3.common import base_class, logger  # pytype: disable=pyi-error
 from stable_baselines3.common.evaluation import evaluate_policy
-from stable_baselines3.common.vec_env import DummyVecEnv, VecEnv, sync_envs_normalization
+from stable_baselines3.common.vec_env import DummyVecEnv, VecEnv, sync_envs_normalization, VecNormalize
 
 
 class BaseCallback(ABC):
@@ -263,6 +263,7 @@ class EvalCallback(EventCallback):
     Callback for evaluating an agent.
 
     :param eval_env: The environment used for initialization
+    :param train_env: The environment used for saving moving average of VecNormalize 
     :param callback_on_new_best: Callback to trigger
         when there is a new best model according to the ``mean_reward``
     :param n_eval_episodes: The number of episodes to test the agent
@@ -282,6 +283,7 @@ class EvalCallback(EventCallback):
     def __init__(
         self,
         eval_env: Union[gym.Env, VecEnv],
+        train_env: Union[gym.Env, VecEnv],
         callback_on_eval_end: Optional[BaseCallback] = None,
         callback_on_new_best: Optional[BaseCallback] = None,
         n_eval_episodes: int = 5,
@@ -312,6 +314,7 @@ class EvalCallback(EventCallback):
             assert eval_env.num_envs == 1, "You must pass only one environment for evaluation"
 
         self.eval_env = eval_env
+        self.train_env = train_env
         self.best_model_save_path = best_model_save_path
         # Logs will be written in ``evaluations.npz``
         if log_path is not None:
@@ -417,6 +420,9 @@ class EvalCallback(EventCallback):
                     print("New best mean reward!")
                 if self.best_model_save_path is not None:
                     self.model.save(os.path.join(self.best_model_save_path, "best_model"))
+                    if isinstance(self.train_env, VecNormalize):
+                        self.train_env.save(
+                            os.path.join(self.best_model_save_path, "vec_normalize.pkl"))
                 self.best_mean_reward = mean_reward
                 new_best = True
 
