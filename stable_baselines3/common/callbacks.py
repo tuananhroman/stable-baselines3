@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 import gym
 import numpy as np
+import rospy
 
 from stable_baselines3.common import base_class, logger  # pytype: disable=pyi-error
 from stable_baselines3.common.evaluation import evaluate_policy
@@ -460,20 +461,19 @@ class StopTrainingOnRewardThreshold(BaseCallback):
     :param verbose:
     """
 
-    def __init__(self, reward_threshold: float, task_manager=None, verbose: int = 0):
+    def __init__(self, reward_threshold: float, verbose: int = 0):
         super(StopTrainingOnRewardThreshold, self).__init__(verbose=verbose)
         self.reward_threshold = reward_threshold
-        self.task_manager = task_manager
 
     def _on_step(self) -> bool:
         assert self.parent is not None, "``StopTrainingOnMinimumReward`` callback must be used " "with an ``EvalCallback``"
         # Convert np.bool_ to bool, otherwise callback() is False won't work
-        if self.task_manager is None:
+        if rospy.get_param("/task_mode") != "staged":
             continue_training = bool(self.parent.best_mean_reward < self.reward_threshold)
         else:
             continue_training = not bool(
                 self.parent.best_mean_reward >= self.reward_threshold and
-                self.task_manager._curr_stage == self.task_manager.get_num_stages())
+                rospy.get_param("/last_stage_reached"))
         if self.verbose > 0 and not continue_training:
                 print(
                     f"Stopping training because the mean reward {self.parent.best_mean_reward:.2f} "
